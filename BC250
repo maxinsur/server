@@ -1,0 +1,56 @@
+
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from bs4 import BeautifulSoup
+import re
+def extract_column_text(url, column_number):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    driver.quit()
+    column_elements = soup.select(f'table tr td:nth-child({column_number})')
+    addresses = []
+    for element in column_elements:
+        address = element.get_text(strip=True)
+        if address:
+            address = re.search(r'\*{4}(.{48})', address)
+            if address:
+                full_url = f"https://warthog.acc-pool.pw/miners/{address.group(1)}"
+                addresses.append(full_url)
+    return addresses
+def find_values_in_24h_column(url, min_value=165, max_value=185):
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    driver = webdriver.Chrome(options=chrome_options)
+    driver.get(url)
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    driver.quit()
+    count = 0
+    rows = soup.find_all('tr')
+    for row in rows:
+        cells = row.find_all('td')
+        if len(cells) > 5:
+            text = cells[5].text.strip()
+            try:
+                value = float(re.search(r'\d+\.\d+', text).group())
+                if min_value <= value <= max_value:
+                    count += 1
+            except (ValueError, AttributeError):
+                continue
+    return count
+def main():
+    base_url = 'https://warthog.acc-pool.pw/miners/'
+    column_number = 1
+    urls = extract_column_text(base_url, column_number)
+    total_results = 0
+    for url in urls:
+        result = find_values_in_24h_column(url)
+        print(
+            f" Miner {url} have {result} BC-250 ASICs")
+        total_results += result
+    print(
+        f"Total BC-250: {total_results}")
+if __name__ == "__main__":
+    main()
