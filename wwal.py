@@ -4,7 +4,7 @@ import tempfile
 from concurrent.futures import ThreadPoolExecutor
 
 def create_wallet():
-    search_values = ["max", "wart"]
+    search_values = ["beef", "070707"]
 
     with tempfile.NamedTemporaryFile(suffix='.json', delete=False) as temp_file:
         wallet_name = temp_file.name[:-5]  # Убираем расширение .json из имени временного файла
